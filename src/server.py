@@ -1,15 +1,18 @@
-from gevent.pool import Pool
-from gevent.server import StreamServer
+# Lucas Lima Fernandes
+# https://github.com/lucaslimafernandes
+
+import socket
+import pickle
 
 from errors import CommandError, Disconnect, Error
 
 
-class ProtocolHandler(object):
-    def handle_request(self, socket_file):
-        pass
+# class ProtocolHandler(object):
+#     def handle_request(self, socket_file):
+#         pass
 
-    def write_response(self, socket_file, data):
-        pass
+#     def write_response(self, socket_file, data):
+#         pass
 
 
 class Server(object):
@@ -17,40 +20,53 @@ class Server(object):
     def __init__(
         self,
         host='127.0.0.1',
-        port='31333',
-        max_clients=64
-    ) -> None:
+        port=31334
+        ) -> None:
         
-        self._pool = Pool(max_clients)
-        self._server = StreamServer(
-            listener=(host, port),
-            handle=self.connection_handler,
-            spawn=self._pool
-        )
+        self.host = host
+        self.port = port
 
-        self._protocol = ProtocolHandler()
         self._kv = {
             "default": {}
         }
-        self._commands = self.get_commands()
 
-    def connection_handler(self, conn, address):
-        socket_file = conn.makefile("rwb")
+        self.server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+
+        self._commands:dict = self.get_commands()
+
+    def start(self):
+
+        self.server_socket.bind((self.host, self.port))
+        self.server_socket.listen(1)
+
+        print('Aguardando conexão...')
+        conn, addr = self.server_socket.accept()
+        print('Conectado a:', addr)
+        self.connection_handler(conn)
+
+
+    def connection_handler(self, conn):
 
         while True:
             try:
-                data = self._protocol.handle_request(socket_file)
+                data = conn.recv(4096)
+                if not data:
+                    raise CommandError("Empty data.")
+
+                mensagem = data.decode()
+                # Processa a mensagem
+                comando, *args = mensagem.split()
+                if comando in self._commands:
+                    response = self._commands[comando](*args)
+                else:
+                    response = "Comando não reconhecido."
+
+                conn.send(pickle.dumps(response))
 
             except Disconnect:
                 break
+        conn.close()
 
-            try:
-                resp = self.get_response(data)
-
-            except CommandError as e:
-                resp = Error(e.args[0])
-
-            self._protocol.write_response(socket_file, resp)
 
     def get_commands(self) -> dict:
         return {
@@ -58,12 +74,12 @@ class Server(object):
             "SET": self.set,
             "DELETE": self.delete,
             "FLUSH": self.flush,
-            "MGET": self.mget,
-            "MSET": self.mset,
+            # "MGET": self.mget,
+            # "MSET": self.mset,
         }
 
     def get(self, key:str, schema="default"):
-        _tmp_kv:dict = self.kv[schema]
+        _tmp_kv:dict = self._kv[schema]
         return _tmp_kv.get(key)
 
     def set(self, key:str, value, schema="default"):        
@@ -117,5 +133,6 @@ class Server(object):
 
         return self._commands[command](*data[1:])
 
-    def run(self):
-        self._server.serve_forever()
+
+
+#eof
