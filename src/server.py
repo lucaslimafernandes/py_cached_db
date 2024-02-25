@@ -3,6 +3,7 @@
 
 import socket
 import pickle
+import threading
 
 from errors import CommandError, Disconnect, Error
 
@@ -31,10 +32,17 @@ class Server(object):
         self.server_socket.bind((self.host, self.port))
         self.server_socket.listen(1)
 
-        print("Aguardando conexão...")
-        conn, addr = self.server_socket.accept()
-        print("Conectado a:", addr)
-        self.connection_handler(conn)
+        print("Aguardando conexões...")
+        while True:
+            conn, addr = self.server_socket.accept()
+            print('Conectado a:', addr)
+
+            # Iniciar uma nova thread para lidar com a conexão
+            client_thread = threading.Thread(target=self.connection_handler, args=(conn,))
+            client_thread.start()
+        # conn, addr = self.server_socket.accept()
+        # print("Conectado a:", addr)
+        # self.connection_handler(conn)
 
     def connection_handler(self, conn):
         while True:
