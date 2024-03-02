@@ -1,0 +1,30 @@
+#
+# By Lucas Lima Fernandes
+#
+
+[Unit]
+Description=Py DB Cached dev-0.0.1
+After=network.target
+
+[Service]
+DynamicUser=yes
+WorkingDirectory=/opt/pycacheddb/src/
+ExecStart=python3 /opt/pycacheddb/src/server_exec.py
+
+# device limits
+
+CPUQuota=10%
+MemoryHigh=100M
+MemoryLimit=100M
+MemoryMax=100M
+MemorySwapMax=100M
+
+
+# process
+
+#Restart=always
+#RestartSec=5
+#StartLimitBurst=10
+
+[Install]
+WantedBy=multi-user.target

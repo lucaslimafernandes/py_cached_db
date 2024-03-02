@@ -8,14 +8,6 @@ import threading
 from errors import CommandError, Disconnect, Error
 
 
-# class ProtocolHandler(object):
-#     def handle_request(self, socket_file):
-#         pass
-
-#     def write_response(self, socket_file, data):
-#         pass
-
-
 class Server(object):
     def __init__(self, host="127.0.0.1", port=31334) -> None:
         self.host = host
@@ -73,8 +65,6 @@ class Server(object):
             "FLUSH": self.flush,
             "AGET": self.aget,
             "KGET": self.kget,
-            # "MGET": self.mget,
-            # "MSET": self.mset,
         }
 
     def get(self, key: str, schema="default"):
@@ -109,16 +99,6 @@ class Server(object):
         self._kv.clear()
         self._kv = {"default": {}}
         return kvlen
-
-    # TODO:
-    # def mget(self, *keys):
-    #     return [self._kv.get(key) for key in keys]
-
-    # def mset(self, *items):
-    #     data = zip(items[::2], items[1::2])
-    #     for key, value in data:
-    #         self._kv[key] = value
-    #     return len(data)
 
     def get_response(self, data):
         if not isinstance(data, list):

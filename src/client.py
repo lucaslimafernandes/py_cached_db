@@ -6,7 +6,8 @@ import socket
 import pickle
 from json import dumps, loads
 
-from errors import Disconnect, CommandError, Error
+class Disconnect(Exception):
+    pass
 
 
 class Client:
@@ -66,20 +67,13 @@ class Client:
     def __del__(self):
         self.close()
 
-    def _types(self, a):
-        if isinstance(a, int):
-            return f"int({str(a)})"
-        else:
-            return a
 
 
 if __name__ == "__main__":
     cliente = Client()
-    print(cliente.get("chave1"))
     print(cliente.set("nova_chave", "novo_valor"))
     print(cliente.get("nova_chave"))
     print(cliente.delete("nova_chave"))
-    print(cliente.get("nova_chave"))
     print(cliente.flush())
-    print(cliente.get("chave2"))
+    print(cliente.get_all())
     cliente.close()
