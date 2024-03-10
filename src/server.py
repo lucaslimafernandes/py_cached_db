@@ -4,6 +4,7 @@
 import socket
 import pickle
 import threading
+import numpy as np
 
 from errors import CommandError, Disconnect, Error
 
@@ -14,7 +15,8 @@ class Server(object):
         self.port = port
 
         # Mudança de esquema não está funcionando
-        self._kv = {"default": {}}
+        # self._kv = {"default": {}}
+        self._kv = np.array({"default": {}})
 
         self.server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
@@ -68,21 +70,26 @@ class Server(object):
         }
 
     def get(self, key: str, schema="default"):
-        _tmp_kv: dict = self._kv[schema]
+        # _tmp_kv: dict = self._kv[schema]
+        _tmp_kv: dict = self._kv.item()[schema]
         return _tmp_kv.get(key)
 
     def aget(self, schema="default"):
-        return self._kv[schema]
+        # return self._kv[schema]
+        return self._kv.item()[schema]
 
     def kget(self, schema="default"):
-        return [i for i in self._kv[schema].keys()]
+        # return [i for i in self._kv[schema].keys()]
+        return [i for i in self._kv.item()[schema].keys()]
 
     def set(self, key: str, value, schema="default"):
-        self._kv[schema][key] = value
+        # self._kv[schema][key] = value
+        self._kv.item()[schema][key] = value
         return True
 
     def delete(self, key, schema="default"):
-        _tmp_kv: dict = self._kv[schema]
+        # _tmp_kv: dict = self._kv[schema]
+        _tmp_kv: dict = self._kv.item()[schema]
         if key in _tmp_kv:
             del self._kv[schema][key]
             return True
@@ -95,9 +102,12 @@ class Server(object):
         return False
 
     def flush(self):
-        kvlen = len(self._kv)
-        self._kv.clear()
-        self._kv = {"default": {}}
+        # kvlen = len(self._kv)
+        kvlen = len(self._kv.item())
+        # self._kv.clear()
+        self._kv.item().clear()
+        # self._kv = {"default": {}}
+        self._kv = np.array({"default": {}})
         return kvlen
 
     def get_response(self, data):
